@@ -3,6 +3,7 @@ import { resolve } from 'path';
 import { defineConfig, loadEnv, type Plugin } from 'vite';
 
 import { handleChatRequest } from './src/server/openrouter';
+import { writeResponseStream } from './src/server/writeResponseStream';
 
 const openRouterDevApi = (apiKey: string): Plugin => ({
 	name: 'openrouter-dev-api',
@@ -23,9 +24,13 @@ const openRouterDevApi = (apiKey: string): Plugin => ({
 
 				res.statusCode = response.status;
 				response.headers.forEach((value, name) => res.setHeader(name, value));
-				res.end(await response.text());
+				await writeResponseStream(response.body, res);
 			} catch (error) {
 				server.config.logger.error('Local chat endpoint failed', { error });
+				if (res.headersSent) {
+					res.destroy(error instanceof Error ? error : undefined);
+					return;
+				}
 				res.statusCode = 500;
 				res.setHeader('Content-Type', 'application/json');
 				res.end(JSON.stringify({ error: { message: 'Local chat endpoint failed.' } }));

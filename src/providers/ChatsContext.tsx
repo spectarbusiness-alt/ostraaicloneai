@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
 import type { ChatTurn, OpenRouterMessage } from '@/libs/chatTypes';
-import { runChat } from '@/libs/gemini';
+import { runChat } from '@/libs/openrouter';
 import { ChatContext } from './ChatContext';
 
 export const ChatContextProvider = ({ children }: React.PropsWithChildren) => {
@@ -92,6 +92,7 @@ export const ChatContextProvider = ({ children }: React.PropsWithChildren) => {
 		setIsGenerating(true);
 		setIsPending(true);
 		setIsError(false);
+		setOutput('');
 		setRecentPrompt(
 			prompt.trim() || (images.length ? 'Analyze this image.' : ''),
 		);
@@ -101,10 +102,13 @@ export const ChatContextProvider = ({ children }: React.PropsWithChildren) => {
 		setPrevPrompts((prev) => [...prev.filter((p) => p !== prompt), prompt]);
 
 		setTurns(completedTurns);
-		const { data, error } = await runChat(messages);
+		const { data, error } = await runChat(messages, (chunk) => {
+			setIsPending(false);
+			setOutput((current) => current + chunk);
+		});
 
 		if (error) {
-			setOutput(error);
+			setOutput((current) => (current ? `${current}\n\n${error}` : error));
 			setIsError(true);
 			setIsPending(false);
 			setIsGenerating(false);

@@ -208,7 +208,14 @@ const Main = () => {
 	return (
 		<div className='relative h-screen flex-1 pb-[15vh]'>
 			<nav className='flex items-center justify-between gap-3 px-5 py-[1.375rem] text-base font-light text-brand-300'>
-				<p className='whitespace-nowrap'>Gemini (CE)</p>
+				<div className='flex items-center gap-2'>
+					<img
+						className='h-7 w-7 rounded-full object-contain'
+						src='/ostra-logo.png'
+						alt=''
+					/>
+					<p className='whitespace-nowrap'>Ostra</p>
+				</div>
 
 				<div className='flex items-center gap-3'>
 					<div className='grid h-10 w-10 shrink-0 place-items-center rounded-full bg-brand-100'>
@@ -289,8 +296,8 @@ const Main = () => {
 									<div className='grid h-10 min-w-10 place-items-center'>
 										<img
 											className='-mt-[0.5625rem] aspect-square w-7'
-											src='/gemini.svg'
-											alt='gemini icon'
+											src='/ostra-logo.png'
+											alt='Ostra'
 										/>
 									</div>
 									<div className='markdown-response min-w-0 flex-1 font-light'>
@@ -331,8 +338,8 @@ const Main = () => {
 												? 'animate-spin'
 												: 'rotate-0 [animation-play-state:pause]'
 									}`}
-									src='/gemini.svg'
-									alt='gemini icon'
+									src='/ostra-logo.png'
+									alt='Ostra'
 								/>
 							</div>
 
@@ -522,7 +529,7 @@ const Main = () => {
 					</div>
 
 					<p className='mx-auto my-3 text-center text-xs font-light text-brand-300 sm:text-sm'>
-						Gemini may display inaccurate info, including about people, so
+						Ostra may display inaccurate info, including about people, so
 						double-check its responses.
 					</p>
 				</div>

@@ -1,7 +1,8 @@
 import type { OpenRouterMessage } from '../libs/chatTypes';
 
 const MODEL = 'google/gemini-2.5-flash';
-const MAX_TOKENS = 4096;
+const MAX_TOKENS = 1024;
+const OPENROUTER_TIMEOUT_MS = 30_000;
 const MAX_IMAGES = 4;
 const MAX_IMAGE_DATA_LENGTH = 4_000_000;
 const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
@@ -242,10 +243,16 @@ export async function handleChatRequest(
 		];
 	}
 
+	const abortController = new AbortController();
+	const timeout = setTimeout(
+		() => abortController.abort(),
+		OPENROUTER_TIMEOUT_MS,
+	);
 	try {
 		const upstream = await fetch(
 			'https://openrouter.ai/api/v1/chat/completions',
 			{
+				signal: abortController.signal,
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
@@ -256,19 +263,78 @@ export async function handleChatRequest(
 					messages,
 					temperature: 0.9,
 					max_tokens: MAX_TOKENS,
+					stream: true,
 				}),
 			},
 		);
-		const responseBody = await upstream.text();
+		const headers = {
+			'Content-Type':
+				upstream.headers.get('Content-Type') ?? 'application/json',
+		};
+		if (!upstream.ok) {
+			const responseBody = await upstream.text();
+			clearTimeout(timeout);
+			return new Response(responseBody, { status: upstream.status, headers });
+		}
+		if (!upstream.body) {
+			clearTimeout(timeout);
+			return jsonResponse(
+				{ error: { message: 'OpenRouter returned an empty response.' } },
+				502,
+			);
+		}
 
-		return new Response(responseBody, {
-			status: upstream.status,
-			headers: {
-				'Content-Type':
-					upstream.headers.get('Content-Type') ?? 'application/json',
+		const reader = upstream.body.getReader();
+		const encoder = new TextEncoder();
+		const body = new ReadableStream<Uint8Array>({
+			async pull(streamController) {
+				try {
+					const { done, value } = await reader.read();
+					if (done) {
+						clearTimeout(timeout);
+						reader.releaseLock();
+						streamController.close();
+					} else {
+						streamController.enqueue(value);
+					}
+				} catch (error) {
+					clearTimeout(timeout);
+					reader.releaseLock();
+					if (abortController.signal.aborted) {
+						streamController.enqueue(
+							encoder.encode(
+								`data: ${JSON.stringify({ error: { message: 'OpenRouter took too long to respond. Please try again.' } })}\n\n`,
+							),
+						);
+						streamController.close();
+					} else {
+						streamController.error(error);
+					}
+				}
+			},
+			async cancel(reason) {
+				clearTimeout(timeout);
+				try {
+					await reader.cancel(reason);
+				} finally {
+					reader.releaseLock();
+				}
 			},
 		});
+
+		return new Response(body, {
+			status: upstream.status,
+			headers,
+		});
 	} catch {
+		clearTimeout(timeout);
+		if (abortController.signal.aborted) {
+			return jsonResponse(
+				{ error: { message: 'OpenRouter took too long to respond. Please try again.' } },
+				504,
+			);
+		}
+
 		return jsonResponse(
 			{ error: { message: 'Unable to reach OpenRouter.' } },
 			502,

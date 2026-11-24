@@ -1,10 +1,10 @@
-# Gemini (CE)
+# Ostra
 
-<img width="1408" alt="SCR-20240703-kgws" src="https://github.com/nyintosh/gemini-ce/assets/56629705/3ab37579-eb23-448d-b0b6-314233917463">
+![Ostra logo](public/ostra-logo.png)
 
 ## Description
 
-A simplified clone of Google Gemini, created with React, Tailwind CSS, TypeScript, and Vite. It aims to replicate the core features of Google Gemini in a straightforward manner.
+Ostra is an AI chat app built with React, Tailwind CSS, TypeScript, and Vite.
 
 ## Table of Contents
 
@@ -29,13 +29,13 @@ Make sure you have Node.js installed on your machine.
 Clone the repository:
 
 ```bash
-git clone https://github.com/nyintosh/gemini-ce.git
+git clone https://github.com/spectarbusiness-alt/ostraaicloneai.git
 ```
 
 Navigate to the project directory:
 
 ```bash
-cd gemini-ce
+cd ostraaicloneai
 ```
 
 Install dependencies:
@@ -61,13 +61,22 @@ pnpm install
 
 ## Environment Variables
 
-For local development, add your key to `.env.local` in the project root:
+For local development, create `.env.local` in the project root if it does not
+already exist. You can start from the template:
+
+```bash
+cp .env.example .env.local
+```
+
+Set your OpenRouter key in `.env.local`:
 
 ```env
 OPENROUTER_API_KEY=your_openrouter_api_key
 ```
 
-You can copy `.env.example` to `.env.local` and replace the value with your key. The key is read by the server and is not exposed to the browser. Restart the dev server after adding or changing the key.
+`.env.local` is ignored by Git. The Vite development server reads this value on
+startup and passes it only to the server-side chat endpoint; it is not exposed
+to the browser. Restart `npm run dev` after adding or changing the key.
 
 For Vercel, open your project’s **Settings → Environment Variables**, add `OPENROUTER_API_KEY` with your own OpenRouter key, select the environments you deploy to, and redeploy. Do not commit your key or put it in frontend code. If chat still fails, inspect the failed `/api/chat` invocation in the Vercel function logs. The app uses the `google/gemini-2.5-flash` model through OpenRouter.
 
@@ -107,7 +116,7 @@ If you want to add additional features and improvements, we welcome contribution
 
 ## Live Preview
 
-You can preview the live version of the project at [https://gemini-ce.vercel.app](https://gemini-ce.vercel.app).
+Run `npm run dev` and open [http://localhost:5173](http://localhost:5173) to preview Ostra locally.
 
 ## Starter GitHub Repo for React
 

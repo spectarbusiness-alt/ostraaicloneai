@@ -1,6 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
 import { handleChatRequest } from '../src/server/openrouter';
+import { writeResponseStream } from '../src/server/writeResponseStream';
 
 type VercelRequest = IncomingMessage & { body?: unknown };
 
@@ -48,9 +49,13 @@ export default async function handler(
 		apiResponse.headers.forEach((value, name) =>
 			response.setHeader(name, value),
 		);
-		response.end(await apiResponse.text());
+		await writeResponseStream(apiResponse.body, response);
 	} catch (error) {
 		console.error('Vercel chat function failed', error);
+		if (response.headersSent) {
+			response.destroy(error instanceof Error ? error : undefined);
+			return;
+		}
 		response.statusCode = 500;
 		response.setHeader('Content-Type', 'application/json');
 		response.end(
