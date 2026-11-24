@@ -1,41 +1,42 @@
 import { createContext } from 'react';
 
-import type { ChatTurn } from '@/libs/chatTypes';
+import type { Conversation, ProviderId } from '@/libs/providers';
 
 type ChatContextProps = {
 	sendPrompt: (prompt: string, images?: string[]) => Promise<void>;
-	setPrevPrompts: React.Dispatch<React.SetStateAction<string[]>>;
-	setRecentPrompt: React.Dispatch<React.SetStateAction<string>>;
 	setPrompt: React.Dispatch<React.SetStateAction<string>>;
 	startNewChat: () => void;
-	prevPrompts: string[];
-	recentPrompt: string;
+	openConversation: (conversationId: string) => void;
+	setProviderEnabled: (provider: ProviderId, enabled: boolean) => void;
+	recentChats: { id: string; title: string }[];
 	prompt: string;
-	recentImages: string[];
-	turns: ChatTurn[];
+	turns: Conversation['turns'];
+	providerEnabled: Record<ProviderId, boolean>;
+	retryProvider: (provider: ProviderId, turnId: string) => Promise<void>;
 	responseId: number;
-	isPending: boolean;
 	isGenerating: boolean;
-	isError: boolean;
-	output: string;
 	showResult: boolean;
+	storageError: string | null;
 };
 
 export const ChatContext = createContext<ChatContextProps>({
 	sendPrompt: async () => {},
-	setPrevPrompts: () => {},
-	setRecentPrompt: () => {},
 	setPrompt: () => {},
 	startNewChat: () => {},
-	prevPrompts: [],
-	recentPrompt: '',
+	openConversation: () => {},
+	setProviderEnabled: () => {},
+	recentChats: [],
 	prompt: '',
-	recentImages: [],
 	turns: [],
+	providerEnabled: {
+		gemini: true,
+		groq: true,
+		cerebras: true,
+		mistral: true,
+	},
+	retryProvider: async () => {},
 	responseId: 0,
-	isPending: false,
 	isGenerating: false,
-	isError: false,
-	output: '',
 	showResult: false,
+	storageError: null,
 });

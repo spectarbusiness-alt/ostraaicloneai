@@ -8,10 +8,9 @@ import SidebarMenuItem from './SidebarMenuItem';
 
 const Sidebar = () => {
 	const {
-		sendPrompt,
-		setRecentPrompt,
+		openConversation,
 		startNewChat,
-		prevPrompts,
+		recentChats,
 		isGenerating,
 	} = useContext(ChatContext);
 
@@ -19,11 +18,6 @@ const Sidebar = () => {
 
 	const toggleSidebarExpand = () => {
 		setIsExpanded((prev) => !prev);
-	};
-
-	const loadPrompt = async (prompt: string) => {
-		setRecentPrompt(prompt);
-		await sendPrompt(prompt);
 	};
 
 	return (
@@ -55,16 +49,14 @@ const Sidebar = () => {
 						<p className='my-4 ml-1'>Recent</p>
 
 						<div>
-							{prevPrompts
+							{recentChats
 								.slice()
 								.reverse()
-								.map((prompt, idx) => (
+								.map(({ id, title }) => (
 									<RecentChatItem
-										key={`${prompt} - ${idx}`}
-										onClick={
-											!isGenerating ? () => loadPrompt(prompt) : undefined
-										}
-										label={prompt}
+										key={id}
+										onClick={!isGenerating ? () => openConversation(id) : undefined}
+										label={title}
 									/>
 								))}
 						</div>

@@ -62,23 +62,27 @@ pnpm install
 ## Environment Variables
 
 For local development, create `.env.local` in the project root if it does not
-already exist. You can start from the template:
-
-```bash
-cp .env.example .env.local
-```
-
-Set your OpenRouter key in `.env.local`:
+already exist. Add the API keys for each provider:
 
 ```env
-OPENROUTER_API_KEY=your_openrouter_api_key
+GEMINI_API_KEY=your_gemini_api_key
+GROQ_API_KEY=your_groq_api_key
+CEREBRAS_API_KEY=your_cerebras_api_key
+MISTRAL_API_KEY=your_mistral_api_key
 ```
 
-`.env.local` is ignored by Git. The Vite development server reads this value on
-startup and passes it only to the server-side chat endpoint; it is not exposed
-to the browser. Restart `npm run dev` after adding or changing the key.
+`.env.local` is ignored by Git. The Vite development server reads these values
+on startup and uses them only in server-side provider integrations; they are
+never exposed to the browser. Do not overwrite an existing `.env.local` with
+the template. Restart `npm run dev` after adding or changing a key. Model IDs
+are configured centrally in `src/server/modelConfig.ts`. The current configured
+models are Gemini 3.5 Flash-Lite, GPT-OSS 20B on Groq, Qwen 3.8 27B on Cerebras,
+and Mistral Small via its `latest` alias.
 
-For Vercel, open your project’s **Settings → Environment Variables**, add `OPENROUTER_API_KEY` with your own OpenRouter key, select the environments you deploy to, and redeploy. Do not commit your key or put it in frontend code. If chat still fails, inspect the failed `/api/chat` invocation in the Vercel function logs. The app uses the `google/gemini-2.5-flash` model through OpenRouter.
+For Vercel, add `GEMINI_API_KEY`, `GROQ_API_KEY`, `CEREBRAS_API_KEY`, and
+`MISTRAL_API_KEY` in **Settings → Environment Variables**, select the
+environments to deploy to, and redeploy. Do not commit keys or put them in
+frontend code. Each model column reports its own provider error independently.
 
 ## Starting the Development Server
 

@@ -1,11 +1,12 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
-import { handleChatRequest } from '../src/server/openrouter';
-import { writeResponseStream } from '../src/server/writeResponseStream';
+import { handleProviderChatRequest } from '../../src/server/providerChat';
+import { writeResponseStream } from '../../src/server/writeResponseStream';
 
 type VercelRequest = IncomingMessage & { body?: unknown };
 
-const readBody = async (request: VercelRequest): Promise<string> => {
+const readBody = async (request: VercelRequest): Promise<string | undefined> => {
+	if (request.method === 'GET' || request.method === 'HEAD') return undefined;
 	if (request.body !== undefined) {
 		return typeof request.body === 'string'
 			? request.body
@@ -25,24 +26,29 @@ export default async function handler(
 ): Promise<void> {
 	try {
 		const method = request.method ?? 'POST';
-		const body =
-			method === 'GET' || method === 'HEAD'
-				? undefined
-				: await readBody(request);
+		const body = await readBody(request);
 		const headers = {
 			'Content-Type': request.headers['content-type'] ?? 'application/json',
 		};
-
 		const apiRequest = new Request(
-			new URL(
-				request.url ?? '/api/chat',
-				`https://${request.headers.host ?? 'localhost'}`,
-			),
-			{ method, headers, body },
+			new URL(request.url ?? '/api/chat', `https://${request.headers.host ?? 'localhost'}`),
+			{ method, headers, ...(body === undefined ? {} : { body }) },
 		);
-		const apiResponse = await handleChatRequest(
+		const pathParts = new URL(
+			request.url ?? '/api/chat',
+			'https://localhost',
+		).pathname.split('/').filter(Boolean);
+		const providerName = pathParts[pathParts.length - 1] ?? '';
+		const apiKeys = {
+			gemini: process.env.GEMINI_API_KEY,
+			groq: process.env.GROQ_API_KEY,
+			cerebras: process.env.CEREBRAS_API_KEY,
+			mistral: process.env.MISTRAL_API_KEY,
+		};
+		const apiResponse = await handleProviderChatRequest(
 			apiRequest,
-			process.env.OPENROUTER_API_KEY,
+			providerName,
+			apiKeys,
 		);
 
 		response.statusCode = apiResponse.status;
@@ -51,17 +57,13 @@ export default async function handler(
 		);
 		await writeResponseStream(apiResponse.body, response);
 	} catch (error) {
-		console.error('Vercel chat function failed', error);
+		console.error('Provider chat function failed.');
 		if (response.headersSent) {
 			response.destroy(error instanceof Error ? error : undefined);
 			return;
 		}
 		response.statusCode = 500;
 		response.setHeader('Content-Type', 'application/json');
-		response.end(
-			JSON.stringify({
-				error: { message: 'The chat service failed to start.' },
-			}),
-		);
+		response.end(JSON.stringify({ error: { message: 'The chat service failed to start.' } }));
 	}
 }
