@@ -54,10 +54,10 @@ const providerDevApi = (
 export default defineConfig(({ mode }) => {
 	const env = loadEnv(mode, process.cwd(), '');
 	const apiKeys: Record<ProviderId, string> = {
-		gemini: env.GEMINI_API_KEY,
-		groq: env.GROQ_API_KEY,
-		cerebras: env.CEREBRAS_API_KEY,
-		mistral: env.MISTRAL_API_KEY,
+		gemini: env.GROQ_API_KEY,
+		groq: env.GROQ_API_KEY_2,
+		cerebras: env.GROQ_API_KEY_3,
+		mistral: env.GROQ_API_KEY_4,
 	};
 
 	return {

@@ -40,10 +40,10 @@ export default async function handler(
 		).pathname.split('/').filter(Boolean);
 		const providerName = pathParts[pathParts.length - 1] ?? '';
 		const apiKeys = {
-			gemini: process.env.GEMINI_API_KEY,
-			groq: process.env.GROQ_API_KEY,
-			cerebras: process.env.CEREBRAS_API_KEY,
-			mistral: process.env.MISTRAL_API_KEY,
+			gemini: process.env.GROQ_API_KEY,
+			groq: process.env.GROQ_API_KEY_2,
+			cerebras: process.env.GROQ_API_KEY_3,
+			mistral: process.env.GROQ_API_KEY_4,
 		};
 		const apiResponse = await handleProviderChatRequest(
 			apiRequest,

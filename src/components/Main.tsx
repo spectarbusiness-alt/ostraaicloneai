@@ -8,9 +8,11 @@ import {
 	Lightbulb,
 	Loader,
 	Mic,
+	Plus,
 	SendHorizonal,
 	ThumbsDown,
 	ThumbsUp,
+	X,
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { useContext, useEffect, useRef, useState } from 'react';
@@ -21,30 +23,34 @@ import { ChatContext } from '@/providers/ChatContext';
 
 const MAX_IMAGES = 4;
 const MAX_TOTAL_IMAGE_SIZE = 2.5 * 1024 * 1024;
-const SUPPORTED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
+const SUPPORTED_IMAGE_TYPES = new Set([
+	'image/jpeg',
+	'image/png',
+	'image/webp',
+]);
 const PROVIDERS: {
 	id: ProviderId;
 	name: string;
 	logo: string;
 }[] = [
 	{
-	id: 'gemini',
+		id: 'gemini',
 		name: 'Gemini',
 		logo: 'https://cdn.freebiesupply.com/logos/large/2x/google-gemini-icon.png',
 	},
 	{
-	id: 'groq',
-	name: 'Groq',
+		id: 'groq',
+		name: 'Groq',
 		logo: 'https://cdn.freebiesupply.com/logos/large/2x/google-gemini-icon.png',
 	},
 	{
-	id: 'cerebras',
-	name: 'Cerebras',
+		id: 'cerebras',
+		name: 'Cerebras',
 		logo: 'https://logoeps.com/wp-content/uploads/2025/02/DeepSeek_logo_icon.png',
 	},
 	{
-	id: 'mistral',
-	name: 'Mistral',
+		id: 'mistral',
+		name: 'Mistral',
 		logo: 'https://images.seeklogo.com/logo-png/61/3/perplexity-ai-icon-black-logo-png_seeklogo-611679.png',
 	},
 ];
@@ -89,6 +95,12 @@ const Main = () => {
 	const imageInputRef = useRef<HTMLInputElement>(null);
 	const imagePreviewUrls = useRef<string[]>([]);
 	const speechRecognition = useRef<BrowserSpeechRecognition | null>(null);
+	const activeProviders = PROVIDERS.filter(
+		(provider) => providerEnabled[provider.id],
+	);
+	const inactiveProviders = PROVIDERS.filter(
+		(provider) => !providerEnabled[provider.id],
+	);
 
 	useEffect(
 		() => () => {
@@ -105,7 +117,11 @@ const Main = () => {
 	}, [responseId]);
 
 	const handleSendPrompt = () => {
-		if (isGenerating || isPreparingImages || (!prompt.trim() && !selectedImages.length)) {
+		if (
+			isGenerating ||
+			isPreparingImages ||
+			(!prompt.trim() && !selectedImages.length)
+		) {
 			return;
 		}
 
@@ -121,7 +137,9 @@ const Main = () => {
 			})
 			.catch((error: unknown) => {
 				setImageError(
-					error instanceof Error ? error.message : 'Could not read attached images.',
+					error instanceof Error
+						? error.message
+						: 'Could not read attached images.',
 				);
 			})
 			.finally(() => setIsPreparingImages(false));
@@ -139,7 +157,10 @@ const Main = () => {
 			setImageError(`You can attach up to ${MAX_IMAGES} images per message.`);
 			return;
 		}
-		const selectedSize = selectedImages.reduce((total, image) => total + image.file.size, 0);
+		const selectedSize = selectedImages.reduce(
+			(total, image) => total + image.file.size,
+			0,
+		);
 		const addedSize = pickedFiles.reduce((total, file) => total + file.size, 0);
 		if (selectedSize + addedSize > MAX_TOTAL_IMAGE_SIZE) {
 			setImageError('Keep the combined image size under 2.5 MB.');
@@ -174,7 +195,9 @@ const Main = () => {
 		const SpeechRecognition =
 			window.SpeechRecognition ?? window.webkitSpeechRecognition;
 		if (!SpeechRecognition) {
-			setVoiceError('Voice input is not supported in this browser. Try Chrome or Edge.');
+			setVoiceError(
+				'Voice input is not supported in this browser. Try Chrome or Edge.',
+			);
 			return;
 		}
 
@@ -185,7 +208,9 @@ const Main = () => {
 		recognition.onresult = (event) => {
 			const transcript = event.results[0]?.[0]?.transcript.trim();
 			if (transcript) {
-				setPrompt((current) => [current.trim(), transcript].filter(Boolean).join(' '));
+				setPrompt((current) =>
+					[current.trim(), transcript].filter(Boolean).join(' '),
+				);
 			}
 		};
 		recognition.onerror = (event) => {
@@ -240,7 +265,6 @@ const Main = () => {
 					/>
 					<p className='whitespace-nowrap'>Ostra</p>
 				</div>
-
 			</nav>
 
 			<div className='w-full'>
@@ -296,209 +320,255 @@ const Main = () => {
 								{storageError}
 							</p>
 						)}
-						<div className='grid h-[calc(100vh-11.5rem)] min-w-[880px] grid-cols-4'>
-							{PROVIDERS.map((provider, providerIndex) => (
-								<section
-									key={provider.id}
-									aria-label={`${provider.name} responses`}
-									className={`flex min-h-0 flex-col border-r border-brand-200 ${
-										providerIndex === 0 ? 'border-l' : ''
-									} ${providerEnabled[provider.id] ? '' : 'bg-brand-100/50'}`}
+						<div className='flex h-[calc(100vh-11.5rem)] min-w-[880px]'>
+							{activeProviders.length > 0 ? (
+								<div
+									className='grid min-w-0 flex-1'
+									style={{
+										gridTemplateColumns: `repeat(${activeProviders.length}, minmax(0, 1fr))`,
+									}}
 								>
-									<header className='flex h-12 shrink-0 items-center justify-between gap-2 border-b border-brand-200 px-3'>
-										<div className='flex min-w-0 items-center gap-2'>
-											<img
-												className='h-5 w-5 shrink-0 object-contain'
-												src={provider.logo}
-												alt=''
-											/>
-											<span className='truncate text-sm font-medium'>
-												{provider.name}
-											</span>
-										</div>
-										<button
-											type='button'
-											role='switch'
-											aria-label={`${provider.name} ${providerEnabled[provider.id] ? 'on' : 'off'}`}
-											aria-checked={providerEnabled[provider.id]}
-											onClick={() =>
-												setProviderEnabled(
-													provider.id,
-													!providerEnabled[provider.id],
-												)
-											}
-											className={`relative h-5 w-9 shrink-0 rounded-full transition-colors ${
-												providerEnabled[provider.id]
-													? 'bg-blue-600'
-													: 'bg-brand-300'
+									{activeProviders.map((provider, providerIndex) => (
+										<section
+											key={provider.id}
+											aria-label={`${provider.name} responses`}
+											className={`flex min-h-0 flex-col border-r border-brand-200 ${
+												providerIndex === 0 ? 'border-l' : ''
 											}`}
 										>
-											<span
-												className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-[left] ${
-													providerEnabled[provider.id]
-														? 'left-[18px]'
-														: 'left-0.5'
-												}`}
-											/>
-										</button>
-									</header>
-
-									<div className='no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-4'>
-										{turns.map((turn) => {
-											const response = turn.responses[provider.id];
-											const responseKey = `${turn.id}:${provider.id}`;
-											const vote = votes[responseKey];
-											return (
-												<article
-													key={turn.id}
-													className='mb-6 border-b border-brand-200 pb-5 last:border-0'
+											<header className='flex h-12 shrink-0 items-center justify-between gap-2 border-b border-brand-200 px-3'>
+												<div className='flex min-w-0 items-center gap-2'>
+													<img
+														className='h-5 w-5 shrink-0 object-contain'
+														src={provider.logo}
+														alt=''
+													/>
+													<span className='truncate text-sm font-medium'>
+														{provider.name}
+													</span>
+												</div>
+												<button
+													type='button'
+													aria-label={`Disable ${provider.name}`}
+													title={`Remove ${provider.name}`}
+													onClick={() => setProviderEnabled(provider.id, false)}
+													className='grid h-7 w-7 shrink-0 place-items-center rounded-full text-brand-300 transition-colors hover:bg-brand-100 hover:text-brand-400'
 												>
-													<p className='mb-2 text-xs font-medium text-brand-300'>
-														You
-													</p>
-													<p className='whitespace-pre-wrap break-words text-sm leading-6'>
-														{turn.prompt || 'Analyze this image.'}
-													</p>
-													{turn.images.length > 0 && (
-														<div className='my-3 flex flex-wrap gap-2'>
-															{turn.images.map((image, imageIndex) => (
-																<img
-																	key={`${turn.id}-${imageIndex}`}
-																	src={image}
-																	alt={`Attached image ${imageIndex + 1}`}
-																	className='max-h-24 max-w-full rounded-md object-contain'
-																/>
-															))}
-														</div>
-													)}
+													<X size={16} />
+												</button>
+											</header>
 
-													<div className='mt-4 min-h-8'>
-														{response.content && (
-															<div className='markdown-response answer-animated min-w-0 break-words text-[0.9375rem] font-light'>
-																<ReactMarkdown remarkPlugins={[remarkGfm]}>
-																	{response.content}
-																</ReactMarkdown>
-															</div>
-														)}
-														{response.status === 'loading' && (
-															<div
-																className='mt-3 flex items-center gap-2 text-sm text-brand-300'
-																role='status'
-															>
-																<Loader className='animate-spin' size={14} />
-																<span>
-																	{response.content
-																		? 'Writing response…'
-																		: 'Thinking…'}
-																</span>
-															</div>
-														)}
-														{response.status === 'error' && (
-															<div className='mt-2'>
-																<p role='alert' className='text-sm text-red-600'>
-																	{response.error ?? 'This provider request failed.'}
-																</p>
-																<button
-																	type='button'
-																	className='mt-1 text-xs font-medium text-blue-700 underline disabled:cursor-not-allowed disabled:opacity-50'
-																	disabled={!providerEnabled[provider.id]}
-																	onClick={() => retryProvider(provider.id, turn.id)}
-																>
-																	Retry
-																</button>
-															</div>
-														)}
-														{response.status === 'disabled' && (
-															<p className='mt-2 text-sm text-brand-300'>
-																Not requested — this model was off when you sent
-																the prompt.
+											<div className='no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-4'>
+												{turns.map((turn) => {
+													const response = turn.responses[provider.id];
+													const responseKey = `${turn.id}:${provider.id}`;
+													const vote = votes[responseKey];
+													return (
+														<article
+															key={turn.id}
+															className='mb-6 border-b border-brand-200 pb-5 last:border-0'
+														>
+															<p className='mb-2 text-xs font-medium text-brand-300'>
+																You
 															</p>
-														)}
-													</div>
+															<p className='whitespace-pre-wrap break-words text-sm leading-6'>
+																{turn.prompt || 'Analyze this image.'}
+															</p>
+															{turn.images.length > 0 && (
+																<div className='my-3 flex flex-wrap gap-2'>
+																	{turn.images.map((image, imageIndex) => (
+																		<img
+																			key={`${turn.id}-${imageIndex}`}
+																			src={image}
+																			alt={`Attached image ${imageIndex + 1}`}
+																			className='max-h-24 max-w-full rounded-md object-contain'
+																		/>
+																	))}
+																</div>
+															)}
 
-													{response.status === 'success' && response.content && (
-														<div className='mt-2 flex items-center gap-1 text-brand-300'>
-															<button
-																type='button'
-																onClick={() =>
-																	setVotes((current) => ({
-																		...current,
-																		[responseKey]:
-																			vote === 'like' ? undefined : 'like',
-																	}))
-																}
-																className={`rounded-md p-1.5 transition-colors hover:bg-brand-100 ${
-																	vote === 'like'
-																		? 'bg-brand-100 text-blue-600'
-																		: ''
-																}`}
-																aria-label='Like response'
-																aria-pressed={vote === 'like'}
-																title='Like response'
-															>
-																<ThumbsUp size={14} />
-															</button>
-															<button
-																type='button'
-																onClick={() =>
-																	setVotes((current) => ({
-																		...current,
-																		[responseKey]:
-																			vote === 'dislike' ? undefined : 'dislike',
-																	}))
-																}
-																className={`rounded-md p-1.5 transition-colors hover:bg-brand-100 ${
-																	vote === 'dislike'
-																		? 'bg-brand-100 text-blue-600'
-																		: ''
-																}`}
-																aria-label='Dislike response'
-																aria-pressed={vote === 'dislike'}
-																title='Dislike response'
-															>
-																<ThumbsDown size={14} />
-															</button>
-															<button
-																type='button'
-																onClick={() =>
-																	void handleCopy(response.content, responseKey)
-																}
-																className='rounded-md p-1.5 transition-colors hover:bg-brand-100'
-																aria-label={
-																	copiedKey === responseKey
-																		? 'Response copied'
-																		: 'Copy response'
-																}
-																title={
-																	copiedKey === responseKey
-																		? 'Copied'
-																		: 'Copy response'
-																}
-															>
-																{copiedKey === responseKey ? (
-																	<Check size={14} />
-																) : (
-																	<Copy size={14} />
+															<div className='mt-4 min-h-8'>
+																{response.content && (
+																	<div className='markdown-response answer-animated min-w-0 break-words text-[0.9375rem] font-light'>
+																		<ReactMarkdown remarkPlugins={[remarkGfm]}>
+																			{response.content}
+																		</ReactMarkdown>
+																	</div>
 																)}
-															</button>
-															{copiedKey === responseKey && (
-																<span role='status' className='text-xs'>
-																	Copied
-																</span>
-															)}
-															{copyError && (
-																<span role='alert' className='text-xs text-red-500'>
-																	{copyError}
-																</span>
-															)}
-														</div>
-													)}
-												</article>
-											);
-										})}
-									</div>
-								</section>
-							))}
+																{response.status === 'loading' && (
+																	<div
+																		className='mt-3 flex items-center gap-2 text-sm text-brand-300'
+																		role='status'
+																	>
+																		<Loader
+																			className='animate-spin'
+																			size={14}
+																		/>
+																		<span>
+																			{response.content
+																				? 'Writing response…'
+																				: 'Thinking…'}
+																		</span>
+																	</div>
+																)}
+																{response.status === 'error' && (
+																	<div className='mt-2'>
+																		<p
+																			role='alert'
+																			className='text-sm text-red-600'
+																		>
+																			{response.error ??
+																				'This provider request failed.'}
+																		</p>
+																		<button
+																			type='button'
+																			className='mt-1 text-xs font-medium text-blue-700 underline disabled:cursor-not-allowed disabled:opacity-50'
+																			disabled={!providerEnabled[provider.id]}
+																			onClick={() =>
+																				retryProvider(provider.id, turn.id)
+																			}
+																		>
+																			Retry
+																		</button>
+																	</div>
+																)}
+																{response.status === 'disabled' && (
+																	<p className='mt-2 text-sm text-brand-300'>
+																		Not requested — this model was off when you
+																		sent the prompt.
+																	</p>
+																)}
+															</div>
+
+															{response.status === 'success' &&
+																response.content && (
+																	<div className='mt-2 flex items-center gap-1 text-brand-300'>
+																		<button
+																			type='button'
+																			onClick={() =>
+																				setVotes((current) => ({
+																					...current,
+																					[responseKey]:
+																						vote === 'like'
+																							? undefined
+																							: 'like',
+																				}))
+																			}
+																			className={`rounded-md p-1.5 transition-colors hover:bg-brand-100 ${
+																				vote === 'like'
+																					? 'bg-brand-100 text-blue-600'
+																					: ''
+																			}`}
+																			aria-label='Like response'
+																			aria-pressed={vote === 'like'}
+																			title='Like response'
+																		>
+																			<ThumbsUp size={14} />
+																		</button>
+																		<button
+																			type='button'
+																			onClick={() =>
+																				setVotes((current) => ({
+																					...current,
+																					[responseKey]:
+																						vote === 'dislike'
+																							? undefined
+																							: 'dislike',
+																				}))
+																			}
+																			className={`rounded-md p-1.5 transition-colors hover:bg-brand-100 ${
+																				vote === 'dislike'
+																					? 'bg-brand-100 text-blue-600'
+																					: ''
+																			}`}
+																			aria-label='Dislike response'
+																			aria-pressed={vote === 'dislike'}
+																			title='Dislike response'
+																		>
+																			<ThumbsDown size={14} />
+																		</button>
+																		<button
+																			type='button'
+																			onClick={() =>
+																				void handleCopy(
+																					response.content,
+																					responseKey,
+																				)
+																			}
+																			className='rounded-md p-1.5 transition-colors hover:bg-brand-100'
+																			aria-label={
+																				copiedKey === responseKey
+																					? 'Response copied'
+																					: 'Copy response'
+																			}
+																			title={
+																				copiedKey === responseKey
+																					? 'Copied'
+																					: 'Copy response'
+																			}
+																		>
+																			{copiedKey === responseKey ? (
+																				<Check size={14} />
+																			) : (
+																				<Copy size={14} />
+																			)}
+																		</button>
+																		{copiedKey === responseKey && (
+																			<span role='status' className='text-xs'>
+																				Copied
+																			</span>
+																		)}
+																		{copyError && (
+																			<span
+																				role='alert'
+																				className='text-xs text-red-500'
+																			>
+																				{copyError}
+																			</span>
+																		)}
+																	</div>
+																)}
+														</article>
+													);
+												})}
+											</div>
+										</section>
+									))}
+								</div>
+							) : (
+								<div className='flex min-w-0 flex-1 items-center justify-center px-6 text-center text-sm text-brand-300'>
+									All models are off. Add a model from the list on the right.
+								</div>
+							)}
+							{inactiveProviders.length > 0 && (
+								<aside
+									aria-label='Available models'
+									className='flex w-56 shrink-0 flex-col gap-2 border-l border-brand-200 px-3 py-3'
+								>
+									<p className='px-2 text-xs font-medium text-brand-300'>
+										Add a model
+									</p>
+									{inactiveProviders.map((provider) => (
+										<button
+											key={provider.id}
+											type='button'
+											onClick={() => setProviderEnabled(provider.id, true)}
+											aria-label={`Enable ${provider.name}`}
+											className='flex min-h-12 items-center justify-between gap-2 rounded-full border border-dashed border-brand-200 px-3 text-left text-sm text-brand-300 transition-colors hover:border-brand-300 hover:bg-brand-100'
+										>
+											<span className='flex min-w-0 items-center gap-2'>
+												<img
+													className='h-5 w-5 shrink-0 object-contain'
+													src={provider.logo}
+													alt=''
+												/>
+												<span className='truncate'>{provider.name}</span>
+											</span>
+											<Plus size={16} className='shrink-0' />
+										</button>
+									))}
+								</aside>
+							)}
 						</div>
 					</div>
 				)}
@@ -561,7 +631,9 @@ const Main = () => {
 							className='flex-1 border-none bg-transparent text-black outline-none'
 							type='text'
 							placeholder={
-								selectedImages.length ? 'Ask about your image' : 'Enter a prompt here'
+								selectedImages.length
+									? 'Ask about your image'
+									: 'Enter a prompt here'
 							}
 							value={prompt}
 							disabled={isGenerating || isPreparingImages}
@@ -586,7 +658,9 @@ const Main = () => {
 								className={`grid place-items-center disabled:opacity-50 ${
 									isListening ? 'text-red-500' : ''
 								}`}
-								aria-label={isListening ? 'Stop voice input' : 'Start voice input'}
+								aria-label={
+									isListening ? 'Stop voice input' : 'Start voice input'
+								}
 								aria-pressed={isListening}
 								title={isListening ? 'Stop voice input' : 'Start voice input'}
 							>

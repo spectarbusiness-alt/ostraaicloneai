@@ -1,7 +1,4 @@
-import Cerebras from '@cerebras/cerebras_cloud_sdk';
-import { GoogleGenAI } from '@google/genai';
 import Groq from 'groq-sdk';
-import { Mistral } from '@mistralai/mistralai';
 
 import type { ProviderId, ProviderMessage, ProviderMessagePart } from '../libs/providers';
 import { PROVIDER_MODELS } from './modelConfig';
@@ -12,10 +9,10 @@ const MAX_IMAGES = 4;
 const MAX_IMAGE_DATA_LENGTH = 4_000_000;
 const REQUEST_TIMEOUT_MS = 60_000;
 const PROVIDER_KEY_NAMES: Record<ProviderId, string> = {
-	gemini: 'GEMINI_API_KEY',
-	groq: 'GROQ_API_KEY',
-	cerebras: 'CEREBRAS_API_KEY',
-	mistral: 'MISTRAL_API_KEY',
+	gemini: 'GROQ_API_KEY',
+	groq: 'GROQ_API_KEY_2',
+	cerebras: 'GROQ_API_KEY_3',
+	mistral: 'GROQ_API_KEY_4',
 };
 const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 
@@ -130,39 +127,6 @@ const toOpenAIMessages = (messages: ProviderMessage[]) =>
 		};
 	});
 
-const toGeminiContents = (messages: ProviderMessage[]) =>
-	messages.map((message) => ({
-		role: message.role === 'assistant' ? 'model' : 'user',
-		parts:
-			typeof message.content === 'string'
-				? [{ text: message.content }]
-				: message.content.map((part) => {
-						if (part.type === 'text') return { text: part.text };
-						const match =
-							/^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/]+={0,2})$/.exec(
-								part.image_url.url,
-							);
-						return match
-							? { inlineData: { mimeType: match[1], data: match[2] } }
-							: { text: '' };
-					}),
-	}));
-
-const toMistralMessages = (messages: ProviderMessage[]) =>
-	messages.map((message) => {
-		if (message.role === 'assistant' || typeof message.content === 'string') {
-			return { role: message.role, content: message.content as string };
-		}
-		return {
-			role: 'user' as const,
-			content: message.content.map((part) =>
-				part.type === 'text'
-					? { type: 'text' as const, text: part.text }
-					: { type: 'image_url' as const, imageUrl: part.image_url.url },
-			),
-		};
-	});
-
 const getErrorStatus = (error: unknown): number | undefined => {
 	if (!error || typeof error !== 'object') return undefined;
 	if ('status' in error && typeof error.status === 'number') return error.status;
@@ -174,7 +138,7 @@ const getErrorStatus = (error: unknown): number | undefined => {
 
 const getErrorMessage = (error: unknown, apiKey: string): string => {
 	const status = getErrorStatus(error);
-	if (status === 401 || status === 403) return 'The API key was rejected. Check the provider key in the server environment.';
+	if (status === 401 || status === 403) return 'The API key was rejected. Check the Groq key in the server environment.';
 	if (status === 404) return 'The configured model was not found or is unavailable to this account.';
 	if (status === 408 || status === 504) return 'The provider took too long to respond. Please try again.';
 	if (status === 429) return 'The provider rate limit was reached. Please wait a moment and retry.';
@@ -204,81 +168,20 @@ const streamProvider = async (
 	signal: AbortSignal,
 	onText: (text: string) => void,
 ): Promise<void> => {
-	const model = PROVIDER_MODELS[provider];
-	if (provider === 'gemini') {
-		const client = new GoogleGenAI({ apiKey });
-		const stream = await client.models.generateContentStream({
-			model,
-			contents: toGeminiContents(messages),
-			config: {
-				maxOutputTokens: 2048,
-				abortSignal: signal,
-				httpOptions: { timeout: REQUEST_TIMEOUT_MS },
-			},
-		});
-		for await (const chunk of stream) {
-			if (chunk.text) onText(chunk.text);
-		}
-		return;
-	}
-
-	if (provider === 'groq') {
-		const client = new Groq({ apiKey, timeout: REQUEST_TIMEOUT_MS, maxRetries: 0 });
-		const stream = await client.chat.completions.create(
-			{
-				model,
-				messages: toOpenAIMessages(messages),
-				max_completion_tokens: 2048,
-				stream: true,
-			},
-			{ signal },
-		);
-		for await (const chunk of stream) {
-			const choice = 'choices' in chunk ? chunk.choices?.[0] : undefined;
-			const text = choice && 'delta' in choice ? choice.delta?.content : undefined;
-			if (text) onText(getChunkText(text));
-		}
-		return;
-	}
-
-	if (provider === 'cerebras') {
-		const client = new Cerebras({ apiKey, timeout: REQUEST_TIMEOUT_MS, maxRetries: 0 });
-		const stream = await client.chat.completions.create(
-			{
-				model,
-				messages: toOpenAIMessages(messages),
-				max_completion_tokens: 2048,
-				stream: true,
-			},
-			{ signal },
-		);
-		for await (const chunk of stream) {
-			const choice = 'choices' in chunk ? chunk.choices?.[0] : undefined;
-			const text = choice && 'delta' in choice ? choice.delta?.content : undefined;
-			if (text) onText(getChunkText(text));
-		}
-		return;
-	}
-
-	const client = new Mistral({
-		apiKey,
-		timeoutMs: REQUEST_TIMEOUT_MS,
-		retryConfig: { strategy: 'none' },
-	});
-	const stream = await client.chat.stream(
+	const client = new Groq({ apiKey, timeout: REQUEST_TIMEOUT_MS, maxRetries: 0 });
+	const stream = await client.chat.completions.create(
 		{
-			model,
-			messages: toMistralMessages(messages),
-			maxTokens: 2048,
+			model: PROVIDER_MODELS[provider],
+			messages: toOpenAIMessages(messages),
+			max_completion_tokens: 2048,
+			stream: true,
 		},
-		{ signal, timeoutMs: REQUEST_TIMEOUT_MS, retries: { strategy: 'none' } },
+		{ signal },
 	);
-	for await (const event of stream) {
-		const text =
-			'choices' in event.data
-				? getChunkText(event.data.choices?.[0]?.delta?.content)
-				: '';
-		if (text) onText(text);
+	for await (const chunk of stream) {
+		const choice = 'choices' in chunk ? chunk.choices?.[0] : undefined;
+		const text = choice && 'delta' in choice ? choice.delta?.content : undefined;
+		if (text) onText(getChunkText(text));
 	}
 };
 

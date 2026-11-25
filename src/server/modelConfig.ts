@@ -1,8 +1,8 @@
 import type { ProviderId } from '../libs/providers';
 
 export const PROVIDER_MODELS: Record<ProviderId, string> = {
-	gemini: 'gemini-3.5-flash-lite',
+	gemini: 'openai/gpt-oss-20b',
 	groq: 'openai/gpt-oss-20b',
-	cerebras: 'qwen-3.8-27b',
-	mistral: 'mistral-small-latest',
+	cerebras: 'openai/gpt-oss-20b',
+	mistral: 'openai/gpt-oss-20b',
 };

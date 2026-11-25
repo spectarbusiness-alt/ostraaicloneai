@@ -62,25 +62,25 @@ pnpm install
 ## Environment Variables
 
 For local development, create `.env.local` in the project root if it does not
-already exist. Add the API keys for each provider:
+already exist. Add four Groq API keys. Each UI column keeps its current name
+and uses its own key to make an independent Groq request:
 
 ```env
-GEMINI_API_KEY=your_gemini_api_key
-GROQ_API_KEY=your_groq_api_key
-CEREBRAS_API_KEY=your_cerebras_api_key
-MISTRAL_API_KEY=your_mistral_api_key
+GROQ_API_KEY=your_first_groq_api_key
+GROQ_API_KEY_2=your_second_groq_api_key
+GROQ_API_KEY_3=your_third_groq_api_key
+GROQ_API_KEY_4=your_fourth_groq_api_key
 ```
 
 `.env.local` is ignored by Git. The Vite development server reads these values
 on startup and uses them only in server-side provider integrations; they are
 never exposed to the browser. Do not overwrite an existing `.env.local` with
 the template. Restart `npm run dev` after adding or changing a key. Model IDs
-are configured centrally in `src/server/modelConfig.ts`. The current configured
-models are Gemini 3.5 Flash-Lite, GPT-OSS 20B on Groq, Qwen 3.8 27B on Cerebras,
-and Mistral Small via its `latest` alias.
+are configured centrally in `src/server/modelConfig.ts`. All four columns use
+GPT-OSS 20B on Groq.
 
-For Vercel, add `GEMINI_API_KEY`, `GROQ_API_KEY`, `CEREBRAS_API_KEY`, and
-`MISTRAL_API_KEY` in **Settings → Environment Variables**, select the
+For Vercel, add `GROQ_API_KEY`, `GROQ_API_KEY_2`, `GROQ_API_KEY_3`, and
+`GROQ_API_KEY_4` in **Settings → Environment Variables**, select the
 environments to deploy to, and redeploy. Do not commit keys or put them in
 frontend code. Each model column reports its own provider error independently.
 
