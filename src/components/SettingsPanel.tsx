@@ -33,34 +33,32 @@ const SettingsPanel = ({
 					onClose();
 				}
 			}}
-			className={`sidebar-settings-enter absolute z-30 flex min-h-0 flex-col overflow-hidden rounded-[1.35rem] border border-stone-200 bg-[#f5f4f1] px-2.5 pt-2.5 shadow-xl ${
+			className={`sidebar-settings-enter absolute z-30 flex min-h-0 flex-col ${
 				isAdjacent
-					? 'bottom-6 left-[calc(100%+0.75rem)] w-72 pb-0'
-					: 'inset-x-2 bottom-2 pb-2.5'
+					? 'bottom-6 left-[calc(100%+0.75rem)] w-72'
+					: 'inset-x-2 bottom-2 overflow-hidden rounded-[1.35rem] border border-stone-200 bg-[#f5f4f1] px-2.5 pb-2.5 pt-2.5 shadow-xl'
 			}`}
 			style={{
 				height: isAdjacent ? 'fit-content' : 'min(36rem, calc(100% - 1rem))',
 			}}
 		>
-			<header
-				className={`flex shrink-0 justify-end ${
-					isAdjacent ? 'h-16 items-center' : 'h-7'
-				}`}
-			>
-				<button
-					type='button'
-					onClick={onClose}
-					aria-label='Close settings menu'
-					className='grid h-7 w-7 place-items-center rounded-full text-stone-500 transition-colors hover:bg-white hover:text-stone-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600'
-				>
-					<X size={15} />
-				</button>
-			</header>
+			{!isAdjacent && (
+				<header className='flex h-7 shrink-0 justify-end'>
+					<button
+						type='button'
+						onClick={onClose}
+						aria-label='Close settings menu'
+						className='grid h-7 w-7 place-items-center rounded-full text-stone-500 transition-colors hover:bg-white hover:text-stone-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600'
+					>
+						<X size={15} />
+					</button>
+				</header>
+			)}
 
 			<div
 				className={`no-scrollbar flex min-h-0 ${
 					isAdjacent ? 'flex-none' : 'flex-1'
-				} flex-col overflow-y-auto rounded-[1.1rem] border border-stone-200/80 bg-white/45 px-2.5 pt-2.5 ${
+				} flex-col overflow-y-auto rounded-[1.1rem] border border-stone-200/80 bg-[#f5f4f1] px-2.5 pt-2.5 ${
 					isAdjacent ? 'pb-0' : 'pb-2.5'
 				}`}
 			>
