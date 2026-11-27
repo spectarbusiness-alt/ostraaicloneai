@@ -169,6 +169,30 @@
 	@apply scroll-smooth;
 }
 
+html,
+body,
 #root {
-	@apply flex min-h-screen animate-fade-in;
+	height: 100%;
+	min-height: 100%;
+}
+
+body {
+	overflow: hidden;
+}
+
+#root {
+	height: 100dvh;
+	min-height: 100svh;
+	@apply flex animate-fade-in;
+}
+
+.provider-response-grid {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 640px) {
+	.provider-response-grid {
+		grid-template-columns: var(--provider-columns);
+	}
 }

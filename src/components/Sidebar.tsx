@@ -1,4 +1,4 @@
-import { CircleHelp, History, Menu, Plus, Settings } from 'lucide-react';
+import { CircleHelp, History, Menu, Plus, Settings, X } from 'lucide-react';
 import { useContext, useState } from 'react';
 
 import { ChatContext } from '@/providers/ChatContext';
@@ -6,79 +6,154 @@ import { ChatContext } from '@/providers/ChatContext';
 import RecentChatItem from './RecentChatItem';
 import SidebarMenuItem from './SidebarMenuItem';
 
-const Sidebar = () => {
-	const {
-		openConversation,
-		startNewChat,
-		recentChats,
-		isGenerating,
-	} = useContext(ChatContext);
+type SidebarProps = {
+	isMobileOpen: boolean;
+	onClose: () => void;
+};
 
+const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
+	const { openConversation, startNewChat, recentChats, isGenerating } =
+		useContext(ChatContext);
 	const [isExpanded, setIsExpanded] = useState(true);
 
-	const toggleSidebarExpand = () => {
-		setIsExpanded((prev) => !prev);
+	const handleNewChat = () => {
+		if (isGenerating) return;
+		startNewChat();
+		onClose();
 	};
 
-	return (
-		<div
-			className={`hidden h-screen max-w-60 flex-col justify-between bg-brand-100 px-4 py-6 duration-500 sm:inline-flex ${
-				isExpanded ? 'w-60' : 'w-[4.75rem]'
-			}`}
-		>
-			<div>
-				<button
-					onClick={toggleSidebarExpand}
-					className='grid place-items-center rounded-full p-3'
-				>
-					<Menu size={14} />
-				</button>
+	const recentItems = recentChats
+		.slice()
+		.reverse()
+		.map(({ id, title }) => (
+			<RecentChatItem
+				key={id}
+				onClick={
+					!isGenerating
+						? () => {
+								openConversation(id);
+								onClose();
+							}
+						: undefined
+				}
+				label={title}
+			/>
+		));
 
-				<div
-					onClick={!isGenerating ? startNewChat : undefined}
-					className={`mt-10 inline-flex h-11 cursor-pointer items-center gap-1 rounded-full bg-brand-200 p-[0.875rem] text-sm text-brand-300 duration-300 ${
-						isExpanded ? 'w-[7.25rem]' : 'w-11'
-					}`}
-				>
-					<Plus className='min-w-4' size={16} />
-					<p className='line-clamp-1'>New Chat</p>
+	return (
+		<>
+			<aside
+				aria-label='Main navigation'
+				className={`hidden h-dvh max-w-60 flex-col justify-between bg-brand-100 px-4 py-6 duration-300 sm:flex ${
+					isExpanded ? 'w-60' : 'w-[4.75rem]'
+				}`}
+			>
+				<div>
+					<button
+						type='button'
+						onClick={() => setIsExpanded((expanded) => !expanded)}
+						aria-label={
+							isExpanded ? 'Collapse navigation' : 'Expand navigation'
+						}
+						aria-expanded={isExpanded}
+						className='grid h-11 w-11 place-items-center rounded-full hover:bg-brand-200'
+					>
+						<Menu size={18} />
+					</button>
+					<button
+						type='button'
+						onClick={handleNewChat}
+						disabled={isGenerating}
+						className={`mt-6 inline-flex min-h-11 items-center gap-2 rounded-full bg-brand-200 px-3.5 text-sm text-brand-300 duration-300 disabled:opacity-50 ${
+							isExpanded ? 'w-full' : 'w-11 justify-center px-0'
+						}`}
+					>
+						<Plus className='shrink-0' size={18} />
+						{isExpanded && <span className='truncate'>New Chat</span>}
+					</button>
+
+					{isExpanded && (
+						<nav className='mt-5 flex min-h-0 flex-col'>
+							<p className='my-3 ml-2 text-sm font-medium text-brand-300'>
+								Recent
+							</p>
+							<div className='no-scrollbar max-h-[55vh] overflow-y-auto'>
+								{recentItems}
+							</div>
+						</nav>
+					)}
 				</div>
 
-				{isExpanded ? (
-					<div className='animate-fade-in flex flex-col'>
-						<p className='my-4 ml-1'>Recent</p>
+				<div className='flex flex-col gap-1'>
+					{[
+						{ label: 'Activity', icon: History },
+						{ label: 'Help', icon: CircleHelp },
+						{ label: 'Settings', icon: Settings },
+					].map(({ label, icon: Icon }) => (
+						<SidebarMenuItem
+							key={label}
+							Icon={Icon}
+							label={label}
+							isExpanded={isExpanded}
+						/>
+					))}
+				</div>
+			</aside>
 
-						<div>
-							{recentChats
-								.slice()
-								.reverse()
-								.map(({ id, title }) => (
-									<RecentChatItem
-										key={id}
-										onClick={!isGenerating ? () => openConversation(id) : undefined}
-										label={title}
-									/>
-								))}
-						</div>
-					</div>
-				) : null}
-			</div>
-
-			<div className='flex flex-col'>
-				{[
-					{ label: 'Activity', icon: History },
-					{ label: 'Help', icon: CircleHelp },
-					{ label: 'Settings', icon: Settings },
-				].map(({ label, icon }, idx) => (
-					<SidebarMenuItem
-						key={idx}
-						Icon={icon}
-						label={label}
-						isExpanded={isExpanded}
+			{isMobileOpen && (
+				<div className='fixed inset-0 z-50 sm:hidden'>
+					<button
+						type='button'
+						aria-label='Close navigation menu'
+						onClick={onClose}
+						className='absolute inset-0 h-full w-full bg-black/35'
 					/>
-				))}
-			</div>
-		</div>
+					<aside
+						role='dialog'
+						aria-modal='true'
+						aria-label='Main navigation'
+						onKeyDown={(event) => event.key === 'Escape' && onClose()}
+						className='absolute inset-y-0 left-0 flex w-[min(84vw,20rem)] flex-col bg-brand-100 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-xl'
+					>
+						<div className='flex items-center justify-between border-b border-brand-200 pb-4'>
+							<span className='text-lg font-medium text-brand-300'>Ostra</span>
+							<button
+								type='button'
+								aria-label='Close navigation menu'
+								onClick={onClose}
+								className='grid h-11 w-11 place-items-center rounded-full hover:bg-brand-200'
+							>
+								<X size={20} />
+							</button>
+						</div>
+						<button
+							type='button'
+							onClick={handleNewChat}
+							disabled={isGenerating}
+							className='mt-4 flex min-h-12 items-center gap-3 rounded-2xl bg-brand-200 px-4 text-left text-brand-300 disabled:opacity-50'
+						>
+							<Plus size={20} />
+							<span>New Chat</span>
+						</button>
+						<nav className='mt-5 min-h-0 flex-1 overflow-y-auto'>
+							<p className='mb-2 px-2 text-sm font-medium text-brand-300'>
+								Recent
+							</p>
+							{recentItems}
+						</nav>
+						<div className='border-t border-brand-200 pt-3'>
+							{[
+								{ label: 'Activity', icon: History },
+								{ label: 'Help', icon: CircleHelp },
+								{ label: 'Settings', icon: Settings },
+							].map(({ label, icon: Icon }) => (
+								<SidebarMenuItem key={label} Icon={Icon} label={label} />
+							))}
+						</div>
+					</aside>
+				</div>
+			)}
+		</>
 	);
 };
 
