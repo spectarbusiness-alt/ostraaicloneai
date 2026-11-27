@@ -140,12 +140,13 @@ const loadProviderSettings = (): Record<ProviderId, boolean> => {
 		if (!stored) return DEFAULT_ENABLED;
 		const parsed: unknown = JSON.parse(stored);
 		if (!isRecord(parsed)) return DEFAULT_ENABLED;
-		return PROVIDER_IDS.reduce<Record<ProviderId, boolean>>(
-			(settings, provider) => {
-				settings[provider] =
-					typeof parsed[provider] === 'boolean'
-						? parsed[provider]
-						: DEFAULT_ENABLED[provider];
+			return PROVIDER_IDS.reduce<Record<ProviderId, boolean>>(
+				(settings, provider) => {
+					const storedSetting = parsed[provider];
+					settings[provider] =
+						typeof storedSetting === 'boolean'
+							? storedSetting
+							: DEFAULT_ENABLED[provider];
 				return settings;
 			},
 			{ ...DEFAULT_ENABLED },
