@@ -58,8 +58,8 @@ const SettingsPanel = ({
 			<div
 				className={`no-scrollbar flex min-h-0 ${
 					isAdjacent ? 'flex-none' : 'flex-1'
-				} flex-col overflow-y-auto rounded-[1.1rem] border border-stone-200/80 bg-[#f5f4f1] px-2.5 pt-2.5 ${
-					isAdjacent ? 'pb-0' : 'pb-2.5'
+				} flex-col overflow-y-auto rounded-[1.1rem] border border-stone-200/80 bg-[#f5f4f1] pl-2.5 pt-2.5 ${
+					isAdjacent ? 'pb-0 pr-[65px]' : 'pb-2.5 pr-2.5'
 				}`}
 			>
 				<div className='shrink-0 overflow-hidden rounded-[1.15rem] border border-stone-100 bg-white shadow-sm'>
