@@ -1,7 +1,6 @@
 import {
 	ArrowUpRight,
 	BookOpen,
-	ChevronDown,
 	Code2,
 	Crown,
 	Gift,
@@ -116,17 +115,6 @@ const SettingsPanel = ({
 					<span>Logout</span>
 				</div>
 			</div>
-
-			<footer className='mt-2 flex shrink-0 items-center gap-3 px-1.5 pb-0.5 pt-1'>
-				<div className='grid h-10 w-10 shrink-0 place-items-center rounded-full bg-emerald-600 text-sm font-semibold text-white'>
-					S
-				</div>
-				<div className='min-w-0 flex-1'>
-					<p className='truncate text-sm font-medium text-stone-900'>Spectar</p>
-					<p className='text-xs text-stone-500'>Free</p>
-				</div>
-				<ChevronDown size={18} className='text-stone-500' aria-hidden='true' />
-			</footer>
 		</section>
 	);
 };
