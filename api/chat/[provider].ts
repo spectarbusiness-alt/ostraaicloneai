@@ -40,7 +40,7 @@ export default async function handler(
 		).pathname.split('/').filter(Boolean);
 		const providerName = pathParts[pathParts.length - 1] ?? '';
 		const apiKeys = {
-			gemini: process.env.GROQ_API_KEY_5 || process.env.GROQ_API_KEY,
+			gemini: process.env.GROQ_API_KEY_6 || process.env.GROQ_API_KEY_5 || process.env.GROQ_API_KEY,
 			groq: process.env.GROQ_API_KEY_5_2_2 || process.env.GROQ_API_KEY_2,
 			cerebras: process.env.GROQ_API_KEY_5_3_2 || process.env.GROQ_API_KEY_3,
 			mistral: process.env.GROQ_API_KEY_5_4_2 || process.env.GROQ_API_KEY_4,
