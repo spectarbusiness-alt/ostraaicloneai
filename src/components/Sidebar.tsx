@@ -4,6 +4,7 @@ import { useContext, useState } from 'react';
 import { ChatContext } from '@/providers/ChatContext';
 
 import RecentChatItem from './RecentChatItem';
+import SettingsPanel from './SettingsPanel';
 import SidebarMenuItem from './SidebarMenuItem';
 
 type SidebarProps = {
@@ -15,11 +16,27 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
 	const { openConversation, startNewChat, recentChats, isGenerating } =
 		useContext(ChatContext);
 	const [isExpanded, setIsExpanded] = useState(true);
+	const [isDesktopSettingsOpen, setIsDesktopSettingsOpen] = useState(false);
+	const [isMobileSettingsOpen, setIsMobileSettingsOpen] = useState(false);
+
+	const handleDesktopSettingsClick = () => {
+		setIsExpanded(true);
+		setIsDesktopSettingsOpen((open) => !open);
+	};
+
+	const handleMobileSettingsClick = () => {
+		setIsMobileSettingsOpen((open) => !open);
+	};
+
+	const closeMobileMenu = () => {
+		setIsMobileSettingsOpen(false);
+		onClose();
+	};
 
 	const handleNewChat = () => {
 		if (isGenerating) return;
 		startNewChat();
-		onClose();
+		closeMobileMenu();
 	};
 
 	const recentItems = recentChats
@@ -32,7 +49,7 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
 					!isGenerating
 						? () => {
 								openConversation(id);
-								onClose();
+								closeMobileMenu();
 							}
 						: undefined
 				}
@@ -44,7 +61,7 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
 		<>
 			<aside
 				aria-label='Main navigation'
-				className={`hidden h-dvh max-w-60 flex-col justify-between bg-brand-100 px-4 py-6 duration-300 sm:flex ${
+				className={`hidden h-dvh max-w-60 flex-col justify-between bg-brand-100 px-4 py-6 duration-300 sm:relative sm:flex ${
 					isExpanded ? 'w-60' : 'w-[4.75rem]'
 				}`}
 			>
@@ -95,9 +112,23 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
 							Icon={Icon}
 							label={label}
 							isExpanded={isExpanded}
+							isActive={label === 'Settings' && isDesktopSettingsOpen}
+							controls={
+								label === 'Settings' ? 'desktop-settings-panel' : undefined
+							}
+							onClick={
+								label === 'Settings' ? handleDesktopSettingsClick : undefined
+							}
 						/>
 					))}
 				</div>
+				{isDesktopSettingsOpen && (
+					<SettingsPanel
+						id='desktop-settings-panel'
+						isAdjacent
+						onClose={() => setIsDesktopSettingsOpen(false)}
+					/>
+				)}
 			</aside>
 
 			{isMobileOpen && (
@@ -105,14 +136,14 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
 					<button
 						type='button'
 						aria-label='Close navigation menu'
-						onClick={onClose}
+						onClick={closeMobileMenu}
 						className='absolute inset-0 h-full w-full bg-black/35'
 					/>
 					<aside
 						role='dialog'
 						aria-modal='true'
 						aria-label='Main navigation'
-						onKeyDown={(event) => event.key === 'Escape' && onClose()}
+						onKeyDown={(event) => event.key === 'Escape' && closeMobileMenu()}
 						className='absolute inset-y-0 left-0 flex w-[min(84vw,20rem)] flex-col bg-brand-100 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-xl'
 					>
 						<div className='flex items-center justify-between border-b border-brand-200 pb-4'>
@@ -120,7 +151,7 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
 							<button
 								type='button'
 								aria-label='Close navigation menu'
-								onClick={onClose}
+								onClick={closeMobileMenu}
 								className='grid h-11 w-11 place-items-center rounded-full hover:bg-brand-200'
 							>
 								<X size={20} />
@@ -147,9 +178,26 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
 								{ label: 'Help', icon: CircleHelp },
 								{ label: 'Settings', icon: Settings },
 							].map(({ label, icon: Icon }) => (
-								<SidebarMenuItem key={label} Icon={Icon} label={label} />
+								<SidebarMenuItem
+									key={label}
+									Icon={Icon}
+									label={label}
+									isActive={label === 'Settings' && isMobileSettingsOpen}
+									controls={
+										label === 'Settings' ? 'mobile-settings-panel' : undefined
+									}
+									onClick={
+										label === 'Settings' ? handleMobileSettingsClick : undefined
+									}
+								/>
 							))}
 						</div>
+						{isMobileSettingsOpen && (
+							<SettingsPanel
+								id='mobile-settings-panel'
+								onClose={() => setIsMobileSettingsOpen(false)}
+							/>
+						)}
 					</aside>
 				</div>
 			)}
