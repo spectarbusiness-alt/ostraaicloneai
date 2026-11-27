@@ -7,7 +7,7 @@ import { handleProviderChatRequest } from './src/server/providerChat';
 import { writeResponseStream } from './src/server/writeResponseStream';
 
 const providerDevApi = (
-	apiKeys: Partial<Record<ProviderId, string>>,
+	getApiKeys: () => Partial<Record<ProviderId, string>>,
 ): Plugin => ({
 	name: 'provider-dev-api',
 	configureServer(server) {
@@ -30,7 +30,7 @@ const providerDevApi = (
 				const response = await handleProviderChatRequest(
 					request,
 					providerName,
-					apiKeys,
+					getApiKeys(),
 				);
 
 				res.statusCode = response.status;
@@ -52,16 +52,18 @@ const providerDevApi = (
 });
 
 export default defineConfig(({ mode }) => {
-	const env = loadEnv(mode, process.cwd(), '');
-	const apiKeys: Record<ProviderId, string> = {
-		gemini: env.GROQ_API_KEY,
-		groq: env.GROQ_API_KEY_2,
-		cerebras: env.GROQ_API_KEY_3,
-		mistral: env.GROQ_API_KEY_4,
+	const getApiKeys = (): Partial<Record<ProviderId, string>> => {
+		const env = loadEnv(mode, process.cwd(), '');
+		return {
+			gemini: env.GROQ_API_KEY,
+			groq: env.GROQ_API_KEY_2,
+			cerebras: env.GROQ_API_KEY_3,
+			mistral: env.GROQ_API_KEY_4,
+		};
 	};
 
 	return {
-		plugins: [react(), providerDevApi(apiKeys)],
+		plugins: [react(), providerDevApi(getApiKeys)],
 		resolve: {
 			alias: {
 				'@': resolve(__dirname, 'src'),
