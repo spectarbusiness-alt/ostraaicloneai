@@ -33,15 +33,13 @@ const SettingsPanel = ({
 					onClose();
 				}
 			}}
-			className={`sidebar-settings-enter absolute z-30 flex min-h-0 flex-col overflow-hidden rounded-[1.35rem] border border-stone-200 bg-[#f5f4f1] p-2.5 shadow-xl ${
+			className={`sidebar-settings-enter absolute z-30 flex min-h-0 flex-col overflow-hidden rounded-[1.35rem] border border-stone-200 bg-[#f5f4f1] px-2.5 pt-2.5 shadow-xl ${
 				isAdjacent
-					? 'left-[calc(100%+0.75rem)] top-2 w-80'
-					: 'inset-x-2 bottom-2'
+					? 'left-[calc(100%+0.75rem)] top-2 w-80 pb-0'
+					: 'inset-x-2 bottom-2 pb-2.5'
 			}`}
 			style={{
-				height: isAdjacent
-					? 'min(36rem, calc(100dvh - 1rem))'
-					: 'min(36rem, calc(100% - 1rem))',
+				height: isAdjacent ? 'fit-content' : 'min(36rem, calc(100% - 1rem))',
 			}}
 		>
 			<header className='flex h-7 shrink-0 justify-end'>
@@ -55,7 +53,13 @@ const SettingsPanel = ({
 				</button>
 			</header>
 
-			<div className='no-scrollbar flex min-h-0 flex-1 flex-col overflow-y-auto rounded-[1.1rem] border border-stone-200/80 bg-white/45 p-2.5'>
+			<div
+				className={`no-scrollbar flex min-h-0 ${
+					isAdjacent ? 'flex-none' : 'flex-1'
+				} flex-col overflow-y-auto rounded-[1.1rem] border border-stone-200/80 bg-white/45 px-2.5 pt-2.5 ${
+					isAdjacent ? 'pb-0' : 'pb-2.5'
+				}`}
+			>
 				<div className='shrink-0 overflow-hidden rounded-[1.15rem] border border-stone-100 bg-white shadow-sm'>
 					<div className='px-3 pb-3 pt-3.5'>
 						<div className='flex items-center justify-center gap-2 text-stone-900'>
