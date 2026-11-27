@@ -55,7 +55,7 @@ export default defineConfig(({ mode }) => {
 	const getApiKeys = (): Partial<Record<ProviderId, string>> => {
 		const env = loadEnv(mode, process.cwd(), '');
 		return {
-			gemini: env.GROQ_API_KEY_5 || env.GROQ_API_KEY,
+			gemini: env.GROQ_API_KEY_6 || env.GROQ_API_KEY_5 || env.GROQ_API_KEY,
 			groq: env.GROQ_API_KEY_5_2_2 || env.GROQ_API_KEY_2,
 			cerebras: env.GROQ_API_KEY_5_3_2 || env.GROQ_API_KEY_3,
 			mistral: env.GROQ_API_KEY_5_4_2 || env.GROQ_API_KEY_4,
