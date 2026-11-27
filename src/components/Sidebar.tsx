@@ -25,7 +25,8 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
 	};
 
 	const handleMobileSettingsClick = () => {
-		setIsMobileSettingsOpen((open) => !open);
+		setIsMobileSettingsOpen(true);
+		onClose();
 	};
 
 	const closeMobileMenu = () => {
@@ -113,22 +114,13 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
 							label={label}
 							isExpanded={isExpanded}
 							isActive={label === 'Settings' && isDesktopSettingsOpen}
-							controls={
-								label === 'Settings' ? 'desktop-settings-panel' : undefined
-							}
+							controls={label === 'Settings' ? 'settings-dialog' : undefined}
 							onClick={
 								label === 'Settings' ? handleDesktopSettingsClick : undefined
 							}
 						/>
 					))}
 				</div>
-				{isDesktopSettingsOpen && (
-					<SettingsPanel
-						id='desktop-settings-panel'
-						isAdjacent
-						onClose={() => setIsDesktopSettingsOpen(false)}
-					/>
-				)}
 			</aside>
 
 			{isMobileOpen && (
@@ -184,7 +176,7 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
 									label={label}
 									isActive={label === 'Settings' && isMobileSettingsOpen}
 									controls={
-										label === 'Settings' ? 'mobile-settings-panel' : undefined
+										label === 'Settings' ? 'settings-dialog' : undefined
 									}
 									onClick={
 										label === 'Settings' ? handleMobileSettingsClick : undefined
@@ -192,14 +184,17 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
 								/>
 							))}
 						</div>
-						{isMobileSettingsOpen && (
-							<SettingsPanel
-								id='mobile-settings-panel'
-								onClose={() => setIsMobileSettingsOpen(false)}
-							/>
-						)}
 					</aside>
 				</div>
+			)}
+			{(isDesktopSettingsOpen || isMobileSettingsOpen) && (
+				<SettingsPanel
+					id='settings-dialog'
+					onClose={() => {
+						setIsDesktopSettingsOpen(false);
+						setIsMobileSettingsOpen(false);
+					}}
+				/>
 			)}
 		</>
 	);
