@@ -35,14 +35,18 @@ const SettingsPanel = ({
 			}}
 			className={`sidebar-settings-enter absolute z-30 flex min-h-0 flex-col overflow-hidden rounded-[1.35rem] border border-stone-200 bg-[#f5f4f1] px-2.5 pt-2.5 shadow-xl ${
 				isAdjacent
-					? 'left-[calc(100%+0.75rem)] top-2 w-80 pb-0'
+					? 'bottom-6 left-[calc(100%+0.75rem)] w-72 pb-0'
 					: 'inset-x-2 bottom-2 pb-2.5'
 			}`}
 			style={{
 				height: isAdjacent ? 'fit-content' : 'min(36rem, calc(100% - 1rem))',
 			}}
 		>
-			<header className='flex h-7 shrink-0 justify-end'>
+			<header
+				className={`flex shrink-0 justify-end ${
+					isAdjacent ? 'h-16 items-center' : 'h-7'
+				}`}
+			>
 				<button
 					type='button'
 					onClick={onClose}
