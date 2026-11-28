@@ -10,12 +10,14 @@ import {
 	Mic,
 	Plus,
 	SendHorizonal,
+	Menu,
 	ThumbsDown,
 	ThumbsUp,
 	X,
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { useContext, useEffect, useRef, useState } from 'react';
+import type { CSSProperties } from 'react';
 import remarkGfm from 'remark-gfm';
 
 import type { ProviderId } from '@/libs/providers';
@@ -66,7 +68,11 @@ const readImage = (file: File): Promise<string> =>
 		reader.readAsDataURL(file);
 	});
 
-const Main = () => {
+type MainProps = {
+	onOpenSidebar: () => void;
+};
+
+const Main = ({ onOpenSidebar }: MainProps) => {
 	const {
 		sendPrompt,
 		setPrompt,
@@ -255,8 +261,16 @@ const Main = () => {
 	};
 
 	return (
-		<div className='relative h-screen flex-1 pb-[15vh]'>
-			<nav className='flex w-full items-center justify-between gap-3 px-5 py-[1.375rem] text-base font-light text-brand-300'>
+		<div className='relative flex h-[100dvh] min-h-[100svh] min-w-0 flex-1 flex-col overflow-hidden bg-white pb-[env(safe-area-inset-bottom)]'>
+			<nav className='flex h-14 w-full shrink-0 items-center gap-3 border-b border-brand-100 px-3 text-base font-light text-brand-300 sm:px-5'>
+				<button
+					type='button'
+					onClick={onOpenSidebar}
+					aria-label='Open navigation menu'
+					className='grid h-11 w-11 shrink-0 place-items-center rounded-full hover:bg-brand-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-300 sm:hidden'
+				>
+					<Menu size={20} />
+				</button>
 				<div className='flex items-center gap-2'>
 					<img
 						className='h-7 w-7 rounded-full object-contain'
@@ -267,11 +281,11 @@ const Main = () => {
 				</div>
 			</nav>
 
-			<div className='w-full'>
+			<main className='flex min-h-0 w-full flex-1 flex-col'>
 				{!showResult ? (
-					<div className='no-scrollbar mx-auto h-[calc(100vh-5.25rem)] w-full max-w-[55rem] overflow-y-scroll px-[5%] pb-40'>
-						<div className='my-14 p-5 text-6xl font-medium'>
-							<p className='text-brand-400'>
+					<div className='no-scrollbar mx-auto h-full min-h-0 w-full max-w-[55rem] flex-1 overflow-y-auto px-4 pb-6 sm:px-[5%]'>
+						<div className='my-8 p-2 text-4xl font-medium sm:my-14 sm:p-5 sm:text-6xl'>
+							<p className='text-slate-800'>
 								<span className='bg-gradient-to-br from-[#4285f4] via-[#9b72cb] to-[#d96570] bg-clip-text [-webkit-background-clip:text] [-webkit-text-fill-color:transparent]'>
 									Hello, Human
 								</span>
@@ -280,7 +294,7 @@ const Main = () => {
 							</p>
 						</div>
 
-						<div className='grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-4 p-5'>
+						<div className='grid grid-cols-1 gap-3 px-2 pb-4 sm:grid-cols-[repeat(auto-fill,minmax(180px,1fr))] sm:gap-4 sm:p-5'>
 							{[
 								{
 									label: 'Brainstorm presentation ideas about a topic',
@@ -300,40 +314,43 @@ const Main = () => {
 									Icon: Lightbulb,
 								},
 							].map(({ label, Icon }, idx) => (
-								<div
-									className='relative h-52 cursor-pointer rounded-xl bg-brand-100 p-4 duration-300 hover:bg-brand-400'
+								<button
+									type='button'
+									onClick={() => setPrompt(label)}
+									className='relative flex min-h-28 w-full items-start rounded-2xl bg-brand-100 p-4 text-left text-brand-300 transition-colors hover:bg-brand-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-300 sm:h-52'
 									key={idx}
 								>
-									<p className='text-brand-300'>{label}</p>
-
-									<div className='absolute bottom-4 right-4 rounded-full bg-white p-2'>
-										<Icon size={20} />
-									</div>
-								</div>
+									<span className='pr-8'>{label}</span>
+									<span className='absolute bottom-3 right-3 grid h-10 w-10 place-items-center rounded-full bg-white'>
+										<Icon size={20} aria-hidden='true' />
+									</span>
+								</button>
 							))}
 						</div>
 					</div>
 				) : (
-					<div className='h-[calc(100vh-5.25rem)] w-full overflow-x-auto overflow-y-hidden px-3 pb-40'>
+					<div className='no-scrollbar h-full min-h-0 w-full flex-1 overflow-y-auto px-3 pb-3 sm:overflow-hidden'>
 						{storageError && (
 							<p role='alert' className='mx-4 mt-2 text-sm text-red-600'>
 								{storageError}
 							</p>
 						)}
-						<div className='flex h-[calc(100vh-11.5rem)] min-w-[880px]'>
+						<div className='flex min-h-full w-full flex-col gap-3 sm:h-full sm:min-h-0 sm:flex-row sm:gap-0'>
 							{activeProviders.length > 0 ? (
 								<div
-									className='grid min-w-0 flex-1'
-									style={{
-										gridTemplateColumns: `repeat(${activeProviders.length}, minmax(0, 1fr))`,
-									}}
+									className='provider-response-grid min-w-0 flex-1'
+									style={
+										{
+											'--provider-columns': `repeat(${activeProviders.length}, minmax(0, 1fr))`,
+										} as CSSProperties
+									}
 								>
 									{activeProviders.map((provider, providerIndex) => (
 										<section
 											key={provider.id}
 											aria-label={`${provider.name} responses`}
-											className={`flex min-h-0 flex-col border-r border-brand-200 ${
-												providerIndex === 0 ? 'border-l' : ''
+											className={`flex min-h-[min(40vh,22rem)] flex-col border-b border-brand-200 last:border-b-0 sm:min-h-0 sm:border-b-0 sm:border-r ${
+												providerIndex === 0 ? 'sm:border-l' : ''
 											}`}
 										>
 											<header className='flex h-12 shrink-0 items-center justify-between gap-2 border-b border-brand-200 px-3'>
@@ -543,7 +560,7 @@ const Main = () => {
 							{inactiveProviders.length > 0 && (
 								<aside
 									aria-label='Available models'
-									className='flex w-56 shrink-0 flex-col gap-2 border-l border-brand-200 px-3 py-3'
+									className='flex w-full shrink-0 flex-col gap-2 border-t border-brand-200 px-1 py-3 sm:w-56 sm:border-l sm:border-t-0 sm:px-3'
 								>
 									<p className='px-2 text-xs font-medium text-brand-300'>
 										Add a model
@@ -573,7 +590,7 @@ const Main = () => {
 					</div>
 				)}
 
-				<div className='absolute bottom-0 left-1/2 mx-auto w-full max-w-[55rem] -translate-x-1/2 px-5 pt-4 backdrop-blur-sm'>
+				<div className='z-10 mx-auto w-full max-w-[55rem] shrink-0 bg-white/95 px-3 pt-2 backdrop-blur-sm sm:px-5 sm:pt-4'>
 					{selectedImages.length > 0 && (
 						<div className='mb-3 flex flex-wrap gap-3'>
 							{selectedImages.map(({ file, previewUrl }) => (
@@ -607,7 +624,7 @@ const Main = () => {
 							{voiceError}
 						</p>
 					)}
-					<div className='flex items-center justify-between gap-5 rounded-full bg-brand-100 px-5 py-3'>
+					<div className='flex min-w-0 items-center justify-between gap-1 rounded-2xl bg-brand-100 px-2 py-1.5 sm:gap-3 sm:rounded-full sm:px-5 sm:py-2'>
 						<input
 							ref={imageInputRef}
 							type='file'
@@ -623,12 +640,17 @@ const Main = () => {
 						/>
 						<input
 							onChange={(e) => setPrompt(e.target.value)}
-							onKeyDown={(e) =>
-								e.key === 'Enter' &&
-								(prompt.trim() || selectedImages.length > 0) &&
-								handleSendPrompt()
-							}
-							className='flex-1 border-none bg-transparent text-black outline-none'
+							onKeyDown={(e) => {
+								if (e.nativeEvent.isComposing || e.keyCode === 229) return;
+								if (
+									e.key === 'Enter' &&
+									(prompt.trim() || selectedImages.length > 0)
+								) {
+									e.preventDefault();
+									handleSendPrompt();
+								}
+							}}
+							className='min-w-0 flex-1 border-none bg-transparent px-2 py-2 text-base text-black outline-none placeholder:text-brand-300'
 							type='text'
 							placeholder={
 								selectedImages.length
@@ -639,12 +661,12 @@ const Main = () => {
 							disabled={isGenerating || isPreparingImages}
 						/>
 
-						<div className='flex items-center gap-5 text-brand-300'>
+						<div className='flex shrink-0 items-center gap-0.5 text-brand-300 sm:gap-1'>
 							<button
 								type='button'
 								onClick={() => imageInputRef.current?.click()}
 								disabled={isGenerating || isPreparingImages}
-								className='grid place-items-center disabled:opacity-50'
+								className='grid h-11 w-11 place-items-center rounded-full hover:bg-brand-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-300 disabled:opacity-50'
 								aria-label='Attach images'
 								title='Attach images'
 							>
@@ -655,7 +677,7 @@ const Main = () => {
 								type='button'
 								onClick={toggleVoiceInput}
 								disabled={isGenerating || isPreparingImages}
-								className={`grid place-items-center disabled:opacity-50 ${
+								className={`grid h-11 w-11 place-items-center rounded-full hover:bg-brand-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-300 disabled:opacity-50 ${
 									isListening ? 'text-red-500' : ''
 								}`}
 								aria-label={
@@ -670,11 +692,14 @@ const Main = () => {
 							{!isGenerating &&
 							!isPreparingImages &&
 							(!!prompt.trim() || selectedImages.length > 0) ? (
-								<SendHorizonal
+								<button
+									type='button'
 									onClick={handleSendPrompt}
-									className='min-w-4 cursor-pointer'
-									size={16}
-								/>
+									aria-label='Send message'
+									className='grid h-11 w-11 place-items-center rounded-full bg-brand-300 text-white transition-colors hover:bg-brand-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-300'
+								>
+									<SendHorizonal size={18} aria-hidden='true' />
+								</button>
 							) : null}
 
 							{isGenerating || isPreparingImages ? (
@@ -688,7 +713,7 @@ const Main = () => {
 						double-check its responses.
 					</p>
 				</div>
-			</div>
+			</main>
 		</div>
 	);
 };

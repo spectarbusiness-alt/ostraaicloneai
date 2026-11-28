@@ -65,9 +65,15 @@ const isChatTurn = (value: unknown): value is ChatTurn => {
 	);
 };
 
-const normalizeSavedResponse = (saved: ProviderResponse | undefined): ProviderResponse =>
+const normalizeSavedResponse = (
+	saved: ProviderResponse | undefined,
+): ProviderResponse =>
 	!saved
-		? { content: '', status: 'error', error: 'This model did not participate in this saved conversation.' }
+		? {
+				content: '',
+				status: 'error',
+				error: 'This model did not participate in this saved conversation.',
+			}
 		: saved.status === 'loading'
 			? {
 					content: saved.content,
@@ -134,12 +140,13 @@ const loadProviderSettings = (): Record<ProviderId, boolean> => {
 		if (!stored) return DEFAULT_ENABLED;
 		const parsed: unknown = JSON.parse(stored);
 		if (!isRecord(parsed)) return DEFAULT_ENABLED;
-		return PROVIDER_IDS.reduce(
-			(settings, provider) => {
-				settings[provider] =
-					typeof parsed[provider] === 'boolean'
-						? parsed[provider]
-						: DEFAULT_ENABLED[provider];
+			return PROVIDER_IDS.reduce<Record<ProviderId, boolean>>(
+				(settings, provider) => {
+					const storedSetting = parsed[provider];
+					settings[provider] =
+						typeof storedSetting === 'boolean'
+							? storedSetting
+							: DEFAULT_ENABLED[provider];
 				return settings;
 			},
 			{ ...DEFAULT_ENABLED },
@@ -194,10 +201,14 @@ const buildMessages = (
 	let imageDataLength = 0;
 	for (let index = messages.length - 1; index >= 0; index--) {
 		const message = messages[index];
-		if (message.role !== 'user' || typeof message.content === 'string') continue;
+		if (message.role !== 'user' || typeof message.content === 'string')
+			continue;
 		const content = message.content.filter((part) => {
 			if (part.type !== 'image_url') return true;
-			if (imageCount >= 4 || imageDataLength + part.image_url.url.length > 4_000_000) {
+			if (
+				imageCount >= 4 ||
+				imageDataLength + part.image_url.url.length > 4_000_000
+			) {
 				return false;
 			}
 			imageCount += 1;
@@ -210,10 +221,11 @@ const buildMessages = (
 };
 
 const ChatContextProvider = ({ children }: React.PropsWithChildren) => {
-	const [conversations, setConversations] = useState<Conversation[]>(loadConversations);
-	const [activeConversationId, setActiveConversationId] = useState<string | null>(
-		() => conversations[0]?.id ?? null,
-	);
+	const [conversations, setConversations] =
+		useState<Conversation[]>(loadConversations);
+	const [activeConversationId, setActiveConversationId] = useState<
+		string | null
+	>(() => conversations[0]?.id ?? null);
 	const [providerEnabled, setProviderEnabled] =
 		useState<Record<ProviderId, boolean>>(loadProviderSettings);
 	const [prompt, setPrompt] = useState('');
@@ -221,8 +233,9 @@ const ChatContextProvider = ({ children }: React.PropsWithChildren) => {
 	const [storageError, setStorageError] = useState<string | null>(null);
 
 	const activeConversation =
-		conversations.find((conversation) => conversation.id === activeConversationId) ??
-		null;
+		conversations.find(
+			(conversation) => conversation.id === activeConversationId,
+		) ?? null;
 	const turns = activeConversation?.turns ?? [];
 	const isGenerating = turns.some((turn) =>
 		PROVIDER_IDS.some(
@@ -250,7 +263,10 @@ const ChatContextProvider = ({ children }: React.PropsWithChildren) => {
 
 	useEffect(() => {
 		try {
-			window.localStorage.setItem(PROVIDERS_KEY, JSON.stringify(providerEnabled));
+			window.localStorage.setItem(
+				PROVIDERS_KEY,
+				JSON.stringify(providerEnabled),
+			);
 		} catch (error) {
 			console.error('Could not save Ostra model settings.', error);
 		}
@@ -263,7 +279,9 @@ const ChatContextProvider = ({ children }: React.PropsWithChildren) => {
 	};
 
 	const handleOpenConversation = (conversationId: string) => {
-		const conversation = conversations.find((item) => item.id === conversationId);
+		const conversation = conversations.find(
+			(item) => item.id === conversationId,
+		);
 		if (!conversation) return;
 		setActiveConversationId(conversation.id);
 		setPrompt('');
@@ -298,7 +316,10 @@ const ChatContextProvider = ({ children }: React.PropsWithChildren) => {
 		);
 	};
 
-	const handleSendPrompt = async (promptText: string, images: string[] = []) => {
+	const handleSendPrompt = async (
+		promptText: string,
+		images: string[] = [],
+	) => {
 		const cleanPrompt = promptText.trim();
 		const title = cleanPrompt || 'Analyze this image.';
 		const previousTurns = activeConversation?.turns ?? [];
@@ -368,11 +389,15 @@ const ChatContextProvider = ({ children }: React.PropsWithChildren) => {
 
 	const handleRetryProvider = async (provider: ProviderId, turnId: string) => {
 		if (!providerEnabled[provider] || !activeConversation) return;
-		const turnIndex = activeConversation.turns.findIndex((turn) => turn.id === turnId);
+		const turnIndex = activeConversation.turns.findIndex(
+			(turn) => turn.id === turnId,
+		);
 		if (turnIndex < 0) return;
 		const turn = activeConversation.turns[turnIndex];
 
-		updateResponse(activeConversation.id, turnId, provider, () => responseFor('loading'));
+		updateResponse(activeConversation.id, turnId, provider, () =>
+			responseFor('loading'),
+		);
 		const messages = buildMessages(
 			activeConversation.turns.slice(0, turnIndex),
 			provider,
@@ -400,7 +425,10 @@ const ChatContextProvider = ({ children }: React.PropsWithChildren) => {
 				startNewChat: handleNewChat,
 				openConversation: handleOpenConversation,
 				setProviderEnabled: (provider, enabled) =>
-					setProviderEnabled((current) => ({ ...current, [provider]: enabled })),
+					setProviderEnabled((current) => ({
+						...current,
+						[provider]: enabled,
+					})),
 				recentChats: conversations
 					.slice()
 					.map(({ id, title }) => ({ id, title })),
