@@ -64,7 +64,10 @@ export default defineConfig(({ mode }) => {
 
 	return {
 		server: {
-			allowedHosts: ['sb-qtf0l8z07l16.vercel.run'],
+			allowedHosts: [
+				'sb-qtf0l8z07l16.vercel.run',
+				'sb-74qfkh5g6d6s.vercel.run',
+			],
 		},
 		plugins: [react(), providerDevApi(getApiKeys)],
 		resolve: {
